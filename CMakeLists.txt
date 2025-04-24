@@ -83,23 +83,25 @@ file(GLOB_RECURSE SRC_WITHOUT_MAIN
         src/wal/*.cpp
         src/wal/*.h)
 
-# 生成smallkv
-add_executable(smallkv ${SRC})
-target_link_libraries(smallkv PRIVATE pthread )
-# 链接abseil中的crc32静态库
-target_link_libraries(smallkv PRIVATE libabsl_crc32c.a libabsl_crc_internal.a libabsl_raw_logging_internal.a)
+# Create a library from the smallkv code
+add_library(smallkv_lib ${SRC_WITHOUT_MAIN})
+target_link_libraries(smallkv_lib PRIVATE pthread libabsl_crc32c.a libabsl_crc_internal.a libabsl_raw_logging_internal.a)
 
-# 生成客户端，底层是smallkv
-file(GLOB_RECURSE SRC_CLI cli/* ${SRC_WITHOUT_MAIN})
-add_executable(smallkv-cli ${SRC_CLI})
-target_link_libraries(smallkv-cli PRIVATE pthread )
-target_link_libraries(smallkv-cli PRIVATE libabsl_crc32c.a libabsl_crc_internal.a libabsl_raw_logging_internal.a)
+# Create the smallkv executable
+add_executable(smallkv src/main.cpp)
+target_link_libraries(smallkv PRIVATE smallkv_lib)
 
-if (SMALLKV-UNITTEST)
-    enable_testing()
-    file(GLOB_RECURSE SRC_TEST
-            tests/*.cpp)
-    add_executable(smallkv-unitest ${SRC_WITHOUT_MAIN} ${SRC_TEST})
-    target_link_libraries(smallkv-unitest PRIVATE gtest pthread )
-    target_link_libraries(smallkv-unitest PRIVATE libabsl_crc32c.a libabsl_crc_internal.a libabsl_raw_logging_internal.a)
-endif (SMALLKV-UNITTEST)
+# Add debug information for GDB
+set_target_properties(smallkv PROPERTIES
+    CMAKE_BUILD_TYPE Debug
+    COMPILE_FLAGS "-g3 -O0"
+)
+
+# if (SMALLKV-UNITTEST)
+#     enable_testing()
+#     file(GLOB_RECURSE SRC_TEST
+#             tests/*.cpp)
+#     add_executable(smallkv-unitest ${SRC_WITHOUT_MAIN} ${SRC_TEST})
+#     target_link_libraries(smallkv-unitest PRIVATE gtest pthread )
+#     target_link_libraries(smallkv-unitest PRIVATE libabsl_crc32c.a libabsl_crc_internal.a libabsl_raw_logging_internal.a)
+# endif (SMALLKV-UNITTEST)
