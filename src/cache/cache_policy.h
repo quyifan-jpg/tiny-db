@@ -17,7 +17,7 @@ namespace smallkv {
         virtual ~CachePolicy() = default;
 
         // 增
-        virtual void insert(const K &key, V *val) = 0;
+        virtual void insert(const K &key, const V &val) = 0;
 
         // 删
         virtual void erase(const K &key) = 0;

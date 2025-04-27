@@ -99,7 +99,7 @@ namespace smallkv {
         }
 
         // 增
-        void insert(const K &key, V *val) override {
+        void insert(const K &key,const V &val) override {
             ScopedLock<LockType> lock_guard(locker);
 //            log::get_logger()->info("nodes_size={}", nodes.size());
 //            log::get_logger()->info("[insert] was called, arg: key={}, *val={}", key, *val);

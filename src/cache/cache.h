@@ -33,7 +33,7 @@ namespace smallkv {
         ~Cache() = default;
 
         // 增
-        void insert(const K &key, V *val) {
+        void insert(const K &key, const V &val) {
             uint64_t sharding_index = hash_fn(key) % SHARDING_NUM;
             caches[sharding_index]->insert(key, val);
         }
