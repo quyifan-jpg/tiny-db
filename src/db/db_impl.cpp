@@ -1,11 +1,19 @@
 #include "db_impl.h"
+#include "../cache/cache.h"
 
 namespace smallkv {
-    DBImpl::DBImpl(Options options) : options_(std::move(options)) {}
+    DBImpl::DBImpl(Options options) : options_(std::move(options)) {
+        logger = log::get_logger();
+        cache = std::make_shared<Cache<std::string, std::string>>(options_.CACHE_SIZE);
+    }
 
     DBStatus DBImpl::Put(const WriteOptions &options,
                          const std::string_view &key,
                          const std::string_view &value) {
+        std::unique_lock<std::shared_mutex> wlock(rwlock_);
+        if (key.empty() || value.empty()) {
+            return Status::InvalidArgs;
+        }
         return Status::NotImpl;
     }
 

@@ -2,39 +2,46 @@
 // Created by qianyy on 2023/1/28.
 //
 #include "db.h"
-#include "db_impl.h"
+#include "db_impl.h" // Include the full definition of DBImpl
 
 namespace smallkv {
-    DB::DB(const Options &options) {
-        db_impl = std::make_unique<DBImpl>(options);
-    }
+    // Constructor: Initialize the unique_ptr using make_unique
+    DB::DB(const Options &options) : impl_(std::make_unique<DBImpl>(options)) {}
+
+    // Destructor: Define it here where DBImpl is a complete type.
+    // The unique_ptr (impl_) will automatically delete the DBImpl object
+    // when the DB object is destroyed. Using = default is sufficient.
+    DB::~DB() = default;
 
     DBStatus DB::Put(const WriteOptions &options,
                      const std::string_view &key,
                      const std::string_view &value) {
-        return db_impl->Put(options, key, value);
+        // Forward the call to the implementation object
+        return impl_->Put(options, key, value);
     }
 
     DBStatus DB::Delete(const WriteOptions &options,
                         const std::string_view &key) {
-        return db_impl->Delete(options, key);
+        return impl_->Delete(options, key);
     }
 
     DBStatus DB::Get(const ReadOptions &options,
                      const std::string_view &key,
-                     std::string *ret_value_ptr) {
-        return db_impl->Get(options, key, ret_value_ptr);
+                     std::string *value) {
+        return impl_->Get(options, key, value);
     }
 
     DBStatus DB::BatchPut(const WriteOptions &options) {
-        return db_impl->BatchPut(options);
+        return impl_->BatchPut(options);
     }
 
     DBStatus DB::BatchDelete(const ReadOptions &options) {
-        return db_impl->BatchDelete(options);
+        return impl_->BatchDelete(options);
     }
 
     DBStatus DB::Close() {
-        return db_impl->Close();
+        return impl_->Close();
     }
-}
+
+
+} // namespace smallkv

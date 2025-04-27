@@ -5,6 +5,7 @@
 #include <string_view>
 #include "status.h"
 #include "options.h"
+#include "db_impl.h"
 
 #ifndef SMALLKV_DB_H
 #define SMALLKV_DB_H
@@ -15,7 +16,7 @@ namespace smallkv {
     public:
         explicit DB(const Options& options);
 
-        ~DB() = default;
+        ~DB();
 
         // DB 应该是单例，禁止拷贝、赋值
         DB(const DB &) = delete;
@@ -43,7 +44,9 @@ namespace smallkv {
         DBStatus Close();
 
     private:
-        std::unique_ptr<DBImpl> db_impl;
+         std::unique_ptr<DBImpl> impl_;
     };
+
+    Options MakeOptionsForDebugging();
 }
 #endif //SMALLKV_DB_H
