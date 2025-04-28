@@ -94,8 +94,8 @@ namespace smallkv {
 
     private:
         std::shared_ptr<SkipList<std::string, std::string>> ordered_table_;
-        std::shared_ptr<FreeListAllocate> alloc;
-        std::shared_ptr<spdlog::logger> logger;
+        std::shared_ptr<FreeListAllocate> alloc_;
+        std::shared_ptr<spdlog::logger> logger_;
     };
 }
 

@@ -14,9 +14,13 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer")
 
 option(SMALLKV-UNITTEST "build unit-test" ON)
 
+# --- Add this line ---
+include(CTest)
+# --------------------
+
 # gtest
 find_package(GTest REQUIRED)
-include_directories(${GTest_INCLUDE_DIRS})
+find_package(Threads REQUIRED) # Needed for GTest and potentially your code
 
 # spdlog
 find_package(spdlog REQUIRED)
@@ -101,11 +105,27 @@ set_target_properties(smallkv PROPERTIES
     COMPILE_FLAGS "-g3 -O0"
 )
 
-# if (SMALLKV-UNITTEST)
-#     enable_testing()
-#     file(GLOB_RECURSE SRC_TEST
-#             tests/*.cpp)
-#     add_executable(smallkv-unitest ${SRC_WITHOUT_MAIN} ${SRC_TEST})
-#     target_link_libraries(smallkv-unitest PRIVATE gtest pthread )
-#     target_link_libraries(smallkv-unitest PRIVATE libabsl_crc32c.a libabsl_crc_internal.a libabsl_raw_logging_internal.a)
-# endif (SMALLKV-UNITTEST)
+# --- Add this section for tests ---
+if(SMALLKV-UNITTEST)
+    message(STATUS "Building unit tests")
+
+    # Find all .cpp files in the test directory
+    file(GLOB TEST_SOURCES "test/*.cpp")
+
+    # Add an executable for the tests
+    add_executable(smallkv_tests ${TEST_SOURCES})
+
+    # Link the test executable against your library and GTest
+    target_link_libraries(smallkv_tests PRIVATE smallkv_lib GTest::gtest GTest::gtest_main Threads::Threads)
+
+    # Include the GTest header directory
+    target_include_directories(smallkv_tests PRIVATE ${GTEST_INCLUDE_DIRS})
+
+    # Add the test executable to CTest
+    include(GoogleTest)
+    gtest_discover_tests(smallkv_tests)
+
+else()
+    message(STATUS "Skipping unit tests")
+endif()
+# ---------------------------------
