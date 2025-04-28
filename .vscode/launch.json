@@ -51,9 +51,9 @@
             ],
             "preLaunchTask": "build",
             "miDebuggerPath": "/usr/bin/gdb",
-            "sourceFileMap": {
-                "/workspaces/tiny-db": "${workspaceFolder}"
-            }
+            // "sourceFileMap": {
+            //     "/workspaces/tiny-db": "${workspaceFolder}"
+            // }
             
         }
     ]

@@ -1,6 +1,4 @@
-//
-// Created by qianyy on 2023/1/12.
-//
+
 #include <string>
 
 #ifndef SMALLKV_COMPARATOR_H

@@ -5,6 +5,9 @@ namespace smallkv {
     DBImpl::DBImpl(Options options) : options_(std::move(options)) {
         logger = log::get_logger();
         cache = std::make_shared<Cache<std::string, std::string>>(options_.CACHE_SIZE);
+        cache->register_clean_handle([](const std::string &key, std::string *val) {
+            delete val;
+        });
     }
 
     DBStatus DBImpl::Put(const WriteOptions &options,
@@ -14,7 +17,8 @@ namespace smallkv {
         if (key.empty() || value.empty()) {
             return Status::InvalidArgs;
         }
-        return Status::NotImpl;
+        cache->insert(std::string(key), new std::string(value));
+        return Status::Success;
     }
 
     DBStatus DBImpl::Delete(const WriteOptions &options,
@@ -25,7 +29,19 @@ namespace smallkv {
     DBStatus DBImpl::Get(const ReadOptions &options,
                          const std::string_view &key,
                          std::string *ret_value_ptr) {
-        return Status::NotImpl;
+        std::shared_lock<std::shared_mutex> rlock(rwlock_);
+        if (key.empty() || ret_value_ptr == nullptr) {
+            return Status::InvalidArgs;
+        }
+        auto node = cache->get(std::string(key));
+        if (node != nullptr) {
+            ret_value_ptr->assign(*(node->val));
+            cache->release(std::string(key)); 
+            node = nullptr; // 清空指针，避免悬空指针
+            return Status::Success;
+        } 
+        // return Status::Success;
+        return Status::NotFound;
     }
 
     DBStatus DBImpl::BatchPut(const WriteOptions &options) {

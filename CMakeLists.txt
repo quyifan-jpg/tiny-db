@@ -4,9 +4,13 @@ project(smallkv)
 set(CMAKE_CXX_STANDARD 17)
 
 add_compile_options(-march=native -ffast-math)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 #set(CMAKE_CXX_FLAGS "-Werror -Wextra")
 set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
+# Add this near the top of your CMakeLists.txt or before targets
+# Ensure -g is also present (usually handled by CMAKE_BUILD_TYPE=Debug)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer")
 
 option(SMALLKV-UNITTEST "build unit-test" ON)
 
