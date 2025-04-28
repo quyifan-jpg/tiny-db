@@ -7,6 +7,7 @@
 #include "status.h"
 #include "options.h"
 #include "log/log.h"
+#include "memory_pool/default_allocator.h"
 
 #ifndef SMALLKV_DB_IMPL_H
 #define SMALLKV_DB_IMPL_H
@@ -19,7 +20,7 @@ namespace smallkv {
 
     class WALWriter;
 
-    class FreeListAllocate;
+    class DefaultAlloc;
 
     /*
      * 支持并发，线程安全
@@ -64,7 +65,7 @@ namespace smallkv {
     private:
         std::shared_ptr<MemTable> mem_table;       // active memtable
         std::shared_ptr<spdlog::logger> logger;    // 日志
-        std::shared_ptr<FreeListAllocate> alloc;   // 内存分配器
+        std::shared_ptr<DefaultAlloc> alloc;   // 内存分配器
         std::shared_ptr<WALWriter> wal_writer;     // 写wal
 
         std::shared_ptr<Cache<std::string, std::string>> cache;     // 缓存

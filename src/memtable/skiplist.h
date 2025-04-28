@@ -94,7 +94,7 @@ namespace smallkv {
     private:
         Node *head_; // 头结点，高度为kMaxHeight，不存数据
         static constexpr int kMaxHeight = 12; // 跳表的最大高度
-        std::shared_ptr<FreeListAllocate> alloc;
+        std::shared_ptr<DefaultAlloc> alloc;
 
         int max_level;         // 当前表的最大高度节点
         int64_t size = 0;      // 表中数据量(kv键值对数量)
@@ -292,8 +292,7 @@ namespace smallkv {
 
     template<typename Key, typename Value>
     typename SkipList<Key, Value>::Node *SkipList<Key, Value>::NewNode(const Key &key, int level, const Value &value) {
-        // todo: 不确定FreeListAllocate实现有没有问题，
-        //  所以此处先使用系统allocator，稳定了再换。
+        // todo: note: 这里使用了new来分配内存，后续可以考虑使用自定义的allocator。
         return new Node(key, level, value);
     }
 

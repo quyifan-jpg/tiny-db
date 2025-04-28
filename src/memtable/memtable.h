@@ -1,7 +1,7 @@
 #include <memory>
 #include <string>
 // #include "memtable_config.h"
-// #include "op_type.h"
+
 #include "log/log.h"
 #include <optional>
 
@@ -17,7 +17,7 @@ namespace smallkv {
     template<typename Key, typename Value>
     class SkipList;
 
-    class FreeListAllocate;
+    class DefaultAlloc;
 
     class SSTableBuilder;
 
@@ -37,7 +37,7 @@ namespace smallkv {
      * */
     class MemTable final {
     public:
-        explicit MemTable(std::shared_ptr<FreeListAllocate> alloc);
+        explicit MemTable(std::shared_ptr<DefaultAlloc> alloc);
 
         ~MemTable() = default;
 
@@ -94,7 +94,7 @@ namespace smallkv {
 
     private:
         std::shared_ptr<SkipList<std::string, std::string>> ordered_table_;
-        std::shared_ptr<FreeListAllocate> alloc_;
+        std::shared_ptr<DefaultAlloc> alloc_;
         std::shared_ptr<spdlog::logger> logger_;
     };
 }
