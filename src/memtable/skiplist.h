@@ -9,7 +9,7 @@
 #include <optional>
 #include "log/log.h"
 #include "memory_pool/default_allocator.h"
-
+#include <concepts>
 
 #ifndef SMALLKV_SKIPLIST_H
 #define SMALLKV_SKIPLIST_H
@@ -115,10 +115,16 @@ namespace smallkv {
     }
 
     template<typename Key, typename Value>
+    // c++ 20 feature
     const Key &SkipList<Key, Value>::SkipListIterator::key() {
         assert(Valid());
         return node->key;
     }
+
+    template<typename T>
+    concept HasSize = requires(const T &t) {
+        { t.size() } -> std::convertible_to<std::size_t>;
+    };
 
     template<typename Key, typename Value>
     const Value &SkipList<Key, Value>::SkipListIterator::value() {
@@ -166,6 +172,7 @@ namespace smallkv {
         }
     }
 
+    
     template<typename Key, typename Value>
     void SkipList<Key, Value>::Delete(const Key &key) {
         if (Contains(key) == false) {
@@ -211,8 +218,18 @@ namespace smallkv {
         }
 
         // 更新内存占用
-        mem_usage -= key.size();
-        mem_usage -= prev[0]->next[0]->value.size(); // prev[0]->next[0]指向待删除的节点
+        if constexpr (HasSize<Key>) {
+            mem_usage -= key.size();      // 有 size() 就用它
+        } else {
+            mem_usage -= sizeof(Key);     // 否则退到 sizeof
+        }
+        if constexpr (HasSize<Value>) {
+            mem_usage -= prev[0]->next[0]->value.size();
+        } else {
+            mem_usage -= sizeof(Value);
+        }
+        // mem_usage -= key.size();
+        // mem_usage -= prev[0]->next[0]->value.size(); // prev[0]->next[0]指向待删除的节点
 
         for (int i = 0; i < level_of_target_node; ++i) {
             if (prev[i] != nullptr) {
@@ -250,6 +267,8 @@ namespace smallkv {
         }
     }
 
+
+
     template<typename Key, typename Value>
     void SkipList<Key, Value>::Insert(const Key &key, const Value &value) {
         if (Contains(key)) {
@@ -259,10 +278,17 @@ namespace smallkv {
 
         ++size; // 更新size
 
-        // todo：这种写法导致了Key、Value必须为string、string_view类型，
         //  模板名存实亡，后续需要改进。
-        mem_usage += key.size();
-        mem_usage += value.size();
+        if constexpr (HasSize<Key>) {
+            mem_usage += key.size();      // 有 size() 就用它
+        } else {
+            mem_usage += sizeof(Key);     // 否则退到 sizeof
+        }
+        if constexpr (HasSize<Value>) {
+            mem_usage += value.size();
+        } else {
+            mem_usage += sizeof(Value);
+        }
 
         // todo： 这里可以优化为 std::vector<Node *> prev(GetCurrentHeight, nullptr);
         //  可以减少一定的计算量，后期优化性能时考虑
@@ -329,7 +355,7 @@ namespace smallkv {
     SkipList<Key, Value>::SkipList(std::shared_ptr<DefaultAlloc> alloc)
             :alloc(std::move(alloc)) {
         srand(time(0));
-        head_ = NewNode("", SkipList::kMaxHeight, "");
+        head_ = NewNode(Key{}, SkipList::kMaxHeight, Value{});
         max_level = 1;
         size = 0;
     }

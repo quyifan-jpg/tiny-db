@@ -2,7 +2,8 @@
 #include "memtable.h"
 #include "memory_pool/default_allocator.h"
 #include "log/log.h"
-#include "skiplist.h" // Ensure this header contains the full definition of SkipList
+#include "skiplist.h" 
+#include "memtable_iterator.h"
 namespace smallkv {
     MemTable::MemTable(std::shared_ptr<DefaultAlloc> alloc)
         : alloc_(std::move(alloc)) {
@@ -39,9 +40,9 @@ namespace smallkv {
     std::optional<std::string> MemTable::Get(const std::string_view &key) {
         return ordered_table_->Get(key.data());
     }
-    //     MemTableIterator *MemTable::NewIter() {
-    //     return new MemTableIterator(this->ordered_table_.get());
-    // }
+    MemTableIterator *MemTable::NewIter() {
+        return new MemTableIterator(this->ordered_table_.get());
+    }
 
     int64_t MemTable::GetMemUsage() {
         return ordered_table_->GetMemUsage();

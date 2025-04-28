@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(smallkv)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 add_compile_options(-march=native -ffast-math)
 set(CMAKE_BUILD_TYPE Debug)
@@ -113,17 +113,17 @@ if(SMALLKV-UNITTEST)
     file(GLOB TEST_SOURCES "test/*.cpp")
 
     # Add an executable for the tests
-    add_executable(smallkv_tests ${TEST_SOURCES})
+    add_executable(tests_smallkv ${TEST_SOURCES})
 
     # Link the test executable against your library and GTest
-    target_link_libraries(smallkv_tests PRIVATE smallkv_lib GTest::gtest GTest::gtest_main Threads::Threads)
+    target_link_libraries(tests_smallkv PRIVATE smallkv_lib GTest::gtest GTest::gtest_main Threads::Threads)
 
     # Include the GTest header directory
-    target_include_directories(smallkv_tests PRIVATE ${GTEST_INCLUDE_DIRS})
+    target_include_directories(tests_smallkv PRIVATE ${GTEST_INCLUDE_DIRS})
 
     # Add the test executable to CTest
     include(GoogleTest)
-    gtest_discover_tests(smallkv_tests)
+    gtest_discover_tests(tests_smallkv)
 
 else()
     message(STATUS "Skipping unit tests")
