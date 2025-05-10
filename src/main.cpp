@@ -20,9 +20,9 @@ int main() {
     WriteOptions wopts;
     ReadOptions  ropts;
 
-    const int N = 10000;
+    const int N = 500000;
     // Determine the number of threads (e.g., based on hardware or fixed)
-    const unsigned int num_threads = std::thread::hardware_concurrency() > 0 ? std::thread::hardware_concurrency() : 4;
+    const unsigned int num_threads = 1;
     std::cout << "Using " << num_threads << " threads." << std::endl;
 
     std::vector<std::thread> threads;

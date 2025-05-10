@@ -60,7 +60,7 @@
             "name": "Debug smallkv_tests",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/smallkv_tests",
+            "program": "${workspaceFolder}/build/tests_smallkv",
             "args": [],  // Add test-specific arguments here if needed
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

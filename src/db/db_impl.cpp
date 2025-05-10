@@ -1,6 +1,7 @@
 #include "db_impl.h"
 #include "../cache/cache.h"
 #include "memtable/memtable.h"
+#include "utils/codec.h"
 namespace smallkv {
     DBImpl::DBImpl(Options options) : options_(std::move(options)) {
         logger = log::get_logger();
@@ -72,9 +73,23 @@ namespace smallkv {
         return Status::NotImpl;
     }
 
-    void DBImpl::EncodeKV(const std::string_view &key,
+        void DBImpl::EncodeKV(const std::string_view &key,
                           const std::string_view &value,
-                          char *buf) {}
+                          char *buf) {
+        /*
+         * 暂时采用的编码方法如下：
+         *     +-------------+-----+-------------+-----+
+         *     | key_len(4B) | key | val_len(4B) | val |
+         *     +-------------+-----+-------------+-----+
+         * todo: 存在优化空间，例如使用variant等，后续有空再说
+         *
+         * */
+        assert(value.size() < UINT32_MAX);
+        utils::EncodeFixed32(buf, key.size());
+        memcpy(buf + 4, key.data(), key.size());
+        utils::EncodeFixed32(buf + 4 + key.size(), value.size());
+        memcpy(buf + 4 + key.size() + 4, value.data(), value.size());
+    }
 
     void DBImpl::MemTableToSST() {}
 
