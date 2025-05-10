@@ -2,6 +2,8 @@
 #include "../cache/cache.h"
 #include "memtable/memtable.h"
 #include "utils/codec.h"
+#include "wal/wal_writer.h" 
+#include "file/file_writer.h"
 namespace smallkv {
     DBImpl::DBImpl(Options options) : options_(std::move(options)) {
         logger = log::get_logger();
@@ -10,6 +12,7 @@ namespace smallkv {
             delete val;
         });
         mem_table = std::make_shared<MemTable>(alloc);
+        wal_writer = std::make_shared<WALWriter>(std::make_shared<FileWriter>(options_.WAL_DIR, true));
     }
 
     DBStatus DBImpl::Put(const WriteOptions &options,
@@ -23,6 +26,12 @@ namespace smallkv {
          * 3. 写缓存(提高读性能);
          * 4. 如果memtable超限，应该落盘，并且开启一个新的memtable;
          */
+
+        // wal
+        char buf[8 + key.size() + value.size()];
+        EncodeKV(key, value, buf);
+        wal_writer->AddLog(buf);
+        // memtable
         if (mem_table->Contains(key)){
             mem_table->Update(key, value);
         } else {

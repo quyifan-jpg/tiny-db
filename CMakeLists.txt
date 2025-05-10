@@ -21,7 +21,14 @@ include(CTest)
 # gtest
 find_package(GTest REQUIRED)
 find_package(Threads REQUIRED) # Needed for GTest and potentially your code
-
+list(APPEND CMAKE_MODULE_PATH "/usr/local/lib/cmake/absl")  # 关键修改
+set(Abseil_DIR "/usr/local/lib/cmake/absl")     
+find_package(absl REQUIRED COMPONENTS 
+    crc32c 
+    crc_internal 
+    raw_logging_internal 
+    base
+)
 # spdlog
 find_package(spdlog REQUIRED)
 include_directories(${spdlog_INCLUDE_DIRS})
@@ -93,8 +100,12 @@ file(GLOB_RECURSE SRC_WITHOUT_MAIN
 
 # Create a library from the smallkv code
 add_library(smallkv_lib ${SRC_WITHOUT_MAIN})
-target_link_libraries(smallkv_lib PRIVATE pthread libabsl_crc32c.a libabsl_crc_internal.a libabsl_raw_logging_internal.a)
-
+target_link_libraries(smallkv_lib PRIVATE 
+    absl::crc32c 
+    absl::crc_internal 
+    absl::raw_logging_internal 
+    absl::base
+)
 # Create the smallkv executable
 add_executable(smallkv src/main.cpp)
 target_link_libraries(smallkv PRIVATE smallkv_lib)
