@@ -42,6 +42,7 @@ namespace smallkv {
 
   // 3. 按 len 读取 payload
   log->resize(len);
+
   s = readableFile->read(log->data(), static_cast<int32_t>(len), offset_);
   if (s != Status::Success) {
     return Status::Corruption;  // 读不够字节，视为损坏
