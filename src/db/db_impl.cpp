@@ -61,6 +61,7 @@ namespace smallkv {
         if (key.empty() || ret_value_ptr == nullptr) {
             return Status::InvalidArgs;
         }
+        // 1. 先从缓存中读取
         auto node = cache->get(std::string(key));
         if (node != nullptr) {
             ret_value_ptr->assign(*(node->val));
@@ -69,7 +70,11 @@ namespace smallkv {
             return Status::Success;
         } 
         // if not found in cache, we can try to read from memtable or sst files
-        
+        if (mem_table->Contains(key)) {
+            auto val = mem_table->Get(key);
+            *ret_value_ptr = mem_table->Get(key.data()).value();
+            return Status::Success;
+        }
         // return Status::Success;
         return Status::NotFound;
     }

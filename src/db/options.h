@@ -22,7 +22,7 @@ namespace smallkv {
 
         // 缓存的键值对数量
         uint32_t CACHE_SIZE = 4096;
-
+        bool wal_sync = true; // 是否开启WAL的fsync，默认开启
         // 表示当前L1SST的序号。 L1SST的命名类似level_1_sst_0.sst, level_1_sst_1.sst, ....
         // 开始的时候需要扫描 STORAGE_DIR 目录，找到下一个sst的LISST_NUM
         uint32_t LISST_NUM = 0;

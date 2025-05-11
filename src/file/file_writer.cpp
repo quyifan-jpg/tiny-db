@@ -101,7 +101,7 @@ namespace smallkv {
     DBStatus FileWriter::buf_persist(const char *data, int32_t len) {
         auto ret = write(fd, data, len);
         // todo: 此处应该检查已经写入的ret，没有完全写完则应该继续写，而不是用assert(ret == len);
-        //  此外在测试中还发现此处可能写入失败，ret=-1
+        //  此外在测试中还发现此处可能写入失败，ret=-   1
         assert(ret == len);
         buffer_offset = 0; // flush buf后，需要设置offset为0
         return Status::Success;
