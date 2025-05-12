@@ -71,6 +71,7 @@
     "any": "cpp",
     "bitset": "cpp",
     "codecvt": "cpp",
-    "forward_list": "cpp"
+    "forward_list": "cpp",
+    "typeindex": "cpp"
   }
 }
