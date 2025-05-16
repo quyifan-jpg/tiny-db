@@ -22,6 +22,8 @@ namespace smallkv {
         // 返回hash函数的数量
         virtual int32_t get_hash_num() = 0;
 
+        virtual void add(const std::string_view &key) = 0;
+
         virtual void create_filter(const std::vector<std::string> &keys) = 0;
 
         // 主要用于读取sst的时候创建filter

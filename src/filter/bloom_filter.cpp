@@ -123,4 +123,19 @@ namespace smallkv {
         hash_func_num = hash_func_num_;
         bits_array = bits_array_;
     }
+
+    void BloomFilter::add(const std::string_view &key) {
+        if (key.empty()) return;
+        uint32_t bits_size = bits_array.size() * 8;
+        // 初始 hash
+        uint32_t h = murmur_hash2(key.data(), key.size());
+        // 生成增量 delta
+        uint32_t delta = (h >> 17) | (h << 15);
+        // k 次哈希
+        for (int j = 0; j < hash_func_num; ++j) {
+        uint32_t bit_pos = h % bits_size;
+        bits_array[bit_pos / 8] |= char(1 << (bit_pos % 8));
+        h += delta;
+        }
+  }
 };

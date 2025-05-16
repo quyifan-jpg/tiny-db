@@ -40,7 +40,7 @@ namespace smallkv {
 
         // 主要用于读取sst的时候创建filter
         void create_filter2(int32_t hash_func_num_, std::string &bits_array_) override;
-
+        void add(const std::string_view &key);
         // 判断元素key是否存在
         // 返回值： false=不存在；true=可能存在；
         bool exists(const std::string_view &key) override;

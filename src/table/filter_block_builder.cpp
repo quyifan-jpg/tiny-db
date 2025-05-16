@@ -13,6 +13,10 @@ namespace smallkv {
         }
         assert(filterPolicy != nullptr);
         _key_data.emplace_back(key);
+        // 这里可以考虑直接在filter中添加
+        // if (filterPolicy != nullptr) {
+        //     filterPolicy->add(key);
+        // }
     }
 
     FilterBlockBuilder::FilterBlockBuilder(int32_t keys_num, double false_positive) {
@@ -29,6 +33,7 @@ namespace smallkv {
     }
 
     void FilterBlockBuilder::create_filter() {
+        // todo 去除create filter这种重复操作
         if (_key_data.empty()) {
             return;
         }

@@ -16,7 +16,7 @@ namespace smallkv {
     private:
         std::shared_ptr<FilterPolicy> filterPolicy = nullptr;
 
-        // todo: 这种写法有点拉胯(存在一定内存开销)，应该在Filter层直接提供add接口，这样就不需要保存_data了
+        // todo: 去除create filter这种重复操作
         std::vector<std::string> _key_data;
 
         std::string _data; // 保存当前Filter的全部数据，用于持久化
@@ -37,7 +37,7 @@ namespace smallkv {
         };
 
         inline void clear() {
-            _key_data.clear();
+
             _data.clear();
         }
 
