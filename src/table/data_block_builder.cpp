@@ -65,9 +65,11 @@ namespace smallkv {
             int32_t _record_num; // 当前Record Group中的Record数量
             OffsetInfo _offsetInfo{0, record_group_offset[i]};
             if (i != record_group_offset.size() - 1) {
+                // 不是最后一个重启点
                 _offsetInfo.size = record_group_offset[i + 1] - record_group_offset[i];
                 _record_num = SSTConfigInfo::RESTART_INTERVAL;
             } else {
+                // 是最后一个重启点
                 _offsetInfo.size = last_offset - record_group_offset[i];
                 _record_num = record_num % SSTConfigInfo::RESTART_INTERVAL;
             }
