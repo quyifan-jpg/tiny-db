@@ -1,5 +1,5 @@
 //
-// Created by qianyy on 2023/1/29.
+// Created on 2023/1/29.
 //
 #include "skiplist.h"
 #include "memtable.h"
@@ -7,16 +7,19 @@
 
 #ifndef SMALLKV_MEMTABLE_ITERATOR_H
 #define SMALLKV_MEMTABLE_ITERATOR_H
-namespace smallkv {
+namespace smallkv
+{
     // 主要用于迭代遍历MemTable
-    class MemTableIterator final {
+    class MemTableIterator final
+    {
     private:
         using SKIter = SkipList<std::string, std::string>::SkipListIterator;
 
         std::shared_ptr<SKIter> iter_;
 
     public:
-        explicit MemTableIterator(SkipList<std::string, std::string> *list){
+        explicit MemTableIterator(SkipList<std::string, std::string> *list)
+        {
             iter_ = std::make_shared<SKIter>(list);
         };
         void MoveToFirst() { iter_->MoveToFirst(); }
@@ -31,4 +34,4 @@ namespace smallkv {
         bool Valid() { return iter_->Valid(); }
     };
 }
-#endif //SMALLKV_MEMTABLE_ITERATOR_H
+#endif // SMALLKV_MEMTABLE_ITERATOR_H

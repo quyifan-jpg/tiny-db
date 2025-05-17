@@ -1,5 +1,5 @@
 //
-// Created by qianyy on 2023/1/11.
+// Created on 2023/1/11.
 //
 #include <cstdint>
 #include "db/status.h"
@@ -8,16 +8,18 @@
 #ifndef SMALLKV_FILE_H
 #define SMALLKV_FILE_H
 
-namespace smallkv {
+namespace smallkv
+{
     // 主要用来进行wal_file、sst_file的持久化
-    class FileWriter final {
+    class FileWriter final
+    {
     private:
         /*
          * 默认以64KB为单位进行批量写
          * */
         static constexpr int32_t BUFFER_SIZE = 65536; // 64 KB
-        int32_t buffer_offset = 0; // 缓冲区的offset，即下一条数据的写入位置
-        char buffer[BUFFER_SIZE]{}; // 缓冲区
+        int32_t buffer_offset = 0;                    // 缓冲区的offset，即下一条数据的写入位置
+        char buffer[BUFFER_SIZE]{};                   // 缓冲区
 
         // 文件描述符
         int32_t fd;
@@ -46,9 +48,10 @@ namespace smallkv {
         DBStatus buf_persist(const char *data, int32_t len);
 
         // 检查buffer是否写满
-        bool is_buffer_full() const {
+        bool is_buffer_full() const
+        {
             return buffer_offset == BUFFER_SIZE;
         }
     };
 }
-#endif //SMALLKV_FILE_H
+#endif // SMALLKV_FILE_H

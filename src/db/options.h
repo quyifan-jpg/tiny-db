@@ -1,17 +1,19 @@
 //
-// Created by qianyy on 2023/1/27.
+// Created on 2023/1/27.
 //
 #include <string>
 
 #ifndef SMALLKV_OPTIONS_H
 #define SMALLKV_OPTIONS_H
-namespace smallkv {
+namespace smallkv
+{
     // DB的配置信息，如是否开启同步、缓存池等
-    struct Options {
-        //todo: 之前的配置信息已经写到了xxx_config中，后续应该集中到这里
+    struct Options
+    {
+        // todo: 之前的配置信息已经写到了xxx_config中，后续应该集中到这里
 
         // 数据库的存储目录，需要自定义
-//        std::string DB_DIR = "./output/db_storage";
+        //        std::string DB_DIR = "./output/db_storage";
         std::string STORAGE_DIR = "./output/db_storage";
 
         // WAL的存储路径，需要自定义
@@ -28,21 +30,25 @@ namespace smallkv {
         uint32_t LISST_NUM = 0;
     };
 
-    inline Options MakeOptionsForDebugging() {
+    inline Options MakeOptionsForDebugging()
+    {
         return Options{};
     }
 
-    inline Options MakeOptionsForProduction() {
+    inline Options MakeOptionsForProduction()
+    {
         return Options{};
     }
 
     // 读时候的配置信息
-    struct ReadOptions {
+    struct ReadOptions
+    {
         // 扩展性备用接口。
     };
 
-    //写时候的配置信息
-    struct WriteOptions {
+    // 写时候的配置信息
+    struct WriteOptions
+    {
         /*
          * 注：C库缓冲 --fflush--> 内核缓冲 --fsync--> 磁盘
          * 解释：
@@ -59,4 +65,4 @@ namespace smallkv {
         bool Flush = false;
     };
 }
-#endif //SMALLKV_OPTIONS_H
+#endif // SMALLKV_OPTIONS_H

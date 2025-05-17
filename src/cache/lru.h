@@ -1,5 +1,5 @@
 //
-// Created by qianyy on 2023/1/4.
+// Created on 2023/1/4.
 //
 #include <list>
 #include <unordered_map>
@@ -12,15 +12,17 @@
 #ifndef SMALLKV_LRU_H
 #define SMALLKV_LRU_H
 
-namespace smallkv {
+namespace smallkv
+{
     /*
      * 对typename LockType = NullLock的解释：
      * 这里LockType是锁的类型，默认情况为NullLock即为无锁，
      * 可以传入三种锁：NullLock、MutexLock、SpinLock
      *
      * */
-    template<typename K, typename V, typename LockType = NullLock>
-    class LRU final : public CachePolicy<K, V> {
+    template <typename K, typename V, typename LockType = NullLock>
+    class LRU final : public CachePolicy<K, V>
+    {
     private:
         const uint32_t cap = 0; // 最大容量
 
@@ -55,8 +57,10 @@ namespace smallkv {
          * 删除node（此时引用计数不一定为0，表示被上层使用），需要把它暂时移动到回收站（指针移动），
          * 等待其引用计数降为0，才可以删除。
          * */
-        void phantom_erase_node(Node<K, V> *node) {
-            if (node) {
+        void phantom_erase_node(Node<K, V> *node)
+        {
+            if (node)
+            {
                 node->in_cache = false;
                 nodes.erase(index[node->key]);
                 index.erase(node->key);
@@ -66,17 +70,22 @@ namespace smallkv {
         }
 
         // 引用计数+1
-        void ref(Node<K, V> *node) {
-            if (node) {
+        void ref(Node<K, V> *node)
+        {
+            if (node)
+            {
                 ++node->ref_cnt;
             }
         }
 
         // 引用计数-1
-        void unref(Node<K, V> *node) {
-            if (node) {
+        void unref(Node<K, V> *node)
+        {
+            if (node)
+            {
                 --node->ref_cnt;
-                if (node->ref_cnt <= 0) {
+                if (node->ref_cnt <= 0)
+                {
                     destructor(node->key, node->val);
                     garbage_station.erase(node->key); // 真正的删除
                     delete node;
@@ -88,21 +97,23 @@ namespace smallkv {
     public:
         explicit LRU(uint32_t cap) : cap(cap) {}
 
-        ~LRU() {
+        ~LRU()
+        {
             // todo: 此处调用phantom_erase_node会出现double free or corruption (out)，暂时不知道原因
             // todo: 不析构也行，此处LRU的析构表示程序结束，此时内存会被系统回收
-//            for (auto &node: nodes) {
-//                // node被标记为0后，在phantom_erase_node中的unref函数中会被清除
-//                node->ref_cnt = 0;
-//                phantom_erase_node(node);
-//            }
+            //            for (auto &node: nodes) {
+            //                // node被标记为0后，在phantom_erase_node中的unref函数中会被清除
+            //                node->ref_cnt = 0;
+            //                phantom_erase_node(node);
+            //            }
         }
 
         // 增
-        void insert(const K &key, V *val) override {
+        void insert(const K &key, V *val) override
+        {
             ScopedLock<LockType> lock_guard(locker);
-//            log::get_logger()->info("nodes_size={}", nodes.size());
-//            log::get_logger()->info("[insert] was called, arg: key={}, *val={}", key, *val);
+            //            log::get_logger()->info("nodes_size={}", nodes.size());
+            //            log::get_logger()->info("[insert] was called, arg: key={}, *val={}", key, *val);
 
             // node init
             auto new_node = new Node<K, V>();
@@ -114,15 +125,19 @@ namespace smallkv {
             new_node->last_access_time = time(0); // 使用当前时间作为last_access_time
 
             auto f = index.find(new_node->key);
-            if (f == index.end()) { // 当前节点是一个新的节点
+            if (f == index.end())
+            { // 当前节点是一个新的节点
                 nodes.push_front(new_node);
                 index[new_node->key] = nodes.begin();
-                if (nodes.size() > cap) { // 满了就淘汰最后的节点
+                if (nodes.size() > cap)
+                { // 满了就淘汰最后的节点
                     auto old_node = nodes.back();
                     // 删除节点(实际上并不是真的删除，只是从LRU中移出到待删除队列中，直到ref_cnt为0才会真正时删除)
                     phantom_erase_node(old_node);
                 }
-            } else {
+            }
+            else
+            {
                 // 当前节点存在，说明发生了更新，需要移动到队首
                 nodes.splice(nodes.begin(), nodes, index[new_node->key]);
                 index[new_node->key] = nodes.begin(); // 需要更新索引
@@ -130,21 +145,25 @@ namespace smallkv {
         }
 
         // 删
-        void erase(const K &key) override {
+        void erase(const K &key) override
+        {
             ScopedLock<LockType> lock_guard(locker);
-//            log::get_logger()->info("[erase] was called, arg: key={}", key);
+            //            log::get_logger()->info("[erase] was called, arg: key={}", key);
             auto iter = index.find(key);
-            if (iter != index.end()) {
-                phantom_erase_node(*(iter->second));// 从LRU的缓存中删除，然后放到回收站
+            if (iter != index.end())
+            {
+                phantom_erase_node(*(iter->second)); // 从LRU的缓存中删除，然后放到回收站
             }
         }
 
         // 查
-        Node<K, V> *get(const K &key) override {
+        Node<K, V> *get(const K &key) override
+        {
             ScopedLock<LockType> lock_guard(locker);
-            //log::get_logger()->info("[get] was called, arg: key={}", key);
+            // log::get_logger()->info("[get] was called, arg: key={}", key);
             auto iter = index.find(key);
-            if (iter == index.end()) {
+            if (iter == index.end())
+            {
                 return nullptr;
             }
             nodes.splice(nodes.begin(), nodes, iter->second); // 移动到头部
@@ -154,24 +173,27 @@ namespace smallkv {
         }
 
         // 存在则返回true
-        bool contains(const K &key) override {
+        bool contains(const K &key) override
+        {
             ScopedLock<LockType> lock_guard(locker);
             return index.find(key) != index.end();
         }
 
         // 释放节点(引用计数减一)
-        void release(const K &key) override {
+        void release(const K &key) override
+        {
             ScopedLock<LockType> lock_guard(locker);
-            //log::get_logger()->info("[release] was called, arg: key={}", key);
+            // log::get_logger()->info("[release] was called, arg: key={}", key);
             unref(*(index[key]));
         }
 
         // 注入销毁节点的回调函数
-        void register_clean_handle(std::function<void(const K &key, V *val)> _destructor) override {
+        void register_clean_handle(std::function<void(const K &key, V *val)> _destructor) override
+        {
             this->destructor = _destructor;
         }
     };
 
 }
 
-#endif //SMALLKV_LRU_H
+#endif // SMALLKV_LRU_H

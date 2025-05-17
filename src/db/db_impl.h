@@ -1,5 +1,5 @@
 //
-// Created by qianyy on 2023/1/28.
+// Created on 2023/1/28.
 //
 #include <memory>
 #include <string_view>
@@ -12,8 +12,9 @@
 #ifndef SMALLKV_DB_IMPL_H
 #define SMALLKV_DB_IMPL_H
 
-namespace smallkv {
-    template<typename K, typename V>
+namespace smallkv
+{
+    template <typename K, typename V>
     class Cache;
 
     class MemTable;
@@ -26,7 +27,8 @@ namespace smallkv {
      * 支持并发，线程安全
      *
      * */
-    class DBImpl {
+    class DBImpl
+    {
     public:
         explicit DBImpl(Options options);
 
@@ -63,19 +65,19 @@ namespace smallkv {
         void MemTableToSST();
 
     private:
-        std::shared_ptr<MemTable> mem_table;       // active memtable
-        std::shared_ptr<spdlog::logger> logger;    // 日志
-        std::shared_ptr<DefaultAlloc> alloc;   // 内存分配器
-        std::shared_ptr<WALWriter> wal_writer;     // 写wal
+        std::shared_ptr<MemTable> mem_table;    // active memtable
+        std::shared_ptr<spdlog::logger> logger; // 日志
+        std::shared_ptr<DefaultAlloc> alloc;    // 内存分配器
+        std::shared_ptr<WALWriter> wal_writer;  // 写wal
 
-        std::shared_ptr<Cache<std::string, std::string>> cache;     // 缓存
+        std::shared_ptr<Cache<std::string, std::string>> cache; // 缓存
 
-        Options options_;                          // 配置信息
+        Options options_; // 配置信息
 
-        std::shared_mutex rwlock_;                 // 读写锁
+        std::shared_mutex rwlock_; // 读写锁
 
-        bool closed = false;                       // 表示数据库没有关闭
+        bool closed = false; // 表示数据库没有关闭
     };
 }
 
-#endif //SMALLKV_DB_IMPL_H
+#endif // SMALLKV_DB_IMPL_H

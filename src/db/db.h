@@ -1,5 +1,5 @@
 //
-// Created by qianyy on 2023/1/27.
+// Created on 2023/1/27.
 //
 #include <memory>
 #include <string_view>
@@ -9,12 +9,14 @@
 
 #ifndef SMALLKV_DB_H
 #define SMALLKV_DB_H
-namespace smallkv {
+namespace smallkv
+{
     class DBImpl;
 
-    class DB {
+    class DB
+    {
     public:
-        explicit DB(const Options& options);
+        explicit DB(const Options &options);
 
         ~DB();
 
@@ -44,9 +46,9 @@ namespace smallkv {
         DBStatus Close();
 
     private:
-         std::unique_ptr<DBImpl> impl_;
+        std::unique_ptr<DBImpl> impl_;
     };
 
     Options MakeOptionsForDebugging();
 }
-#endif //SMALLKV_DB_H
+#endif // SMALLKV_DB_H

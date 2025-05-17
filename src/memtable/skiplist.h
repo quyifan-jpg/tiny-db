@@ -1,5 +1,5 @@
 //
-// Created by qianyy on 2023/1/23.
+// Created on 2023/1/23.
 //
 #include <memory>
 #include <vector>
@@ -13,7 +13,8 @@
 
 #ifndef SMALLKV_SKIPLIST_H
 #define SMALLKV_SKIPLIST_H
-namespace smallkv {
+namespace smallkv
+{
     /*
      * todo：粗略实现的一个跳表，一些地方细节不够到位。后续可以考虑认真阅读leveldb中的skiplist.h
      *
@@ -21,8 +22,9 @@ namespace smallkv {
      * 注：线程不安全、不支持重复的key插入
      *
      * */
-    template<typename Key, typename Value>
-    class SkipList {
+    template <typename Key, typename Value>
+    class SkipList
+    {
         class Node;
 
     public:
@@ -41,10 +43,12 @@ namespace smallkv {
         std::optional<Value> Get(const Key &key);
 
         // 仅用于DEBUG：打印表
-        void OnlyUsedForDebugging_Print_() {
+        void OnlyUsedForDebugging_Print_()
+        {
             auto p = head_->next[0];
             std::cout << "============= DEBUG =============" << std::endl;
-            for (int i = 0; i < size; ++i) {
+            for (int i = 0; i < size; ++i)
+            {
                 std::cout << "key_" << i << " = " << p->key << std::endl;
                 p = p->next[0];
             }
@@ -56,7 +60,8 @@ namespace smallkv {
         inline int64_t GetMemUsage() { return mem_usage; }
 
         // 迭代skiplist，主要是给MemTable中的MemeIterator调用
-        class SkipListIterator {
+        class SkipListIterator
+        {
         public:
             explicit SkipListIterator(const SkipList *list);
 
@@ -92,7 +97,7 @@ namespace smallkv {
         inline Node *NewNode(const Key &key, int level, const Value &value);
 
     private:
-        Node *head_; // 头结点，高度为kMaxHeight，不存数据
+        Node *head_;                          // 头结点，高度为kMaxHeight，不存数据
         static constexpr int kMaxHeight = 12; // 跳表的最大高度
         std::shared_ptr<DefaultAlloc> alloc;
 
@@ -103,68 +108,90 @@ namespace smallkv {
         std::shared_ptr<spdlog::logger> logger = log::get_logger();
     };
 
-    template<typename Key, typename Value>
-    void SkipList<Key, Value>::SkipListIterator::MoveToFirst() {
+    template <typename Key, typename Value>
+    void SkipList<Key, Value>::SkipListIterator::MoveToFirst()
+    {
         node = list_->head_->next[0];
     }
 
-    template<typename Key, typename Value>
-    void SkipList<Key, Value>::SkipListIterator::Next() {
+    template <typename Key, typename Value>
+    void SkipList<Key, Value>::SkipListIterator::Next()
+    {
         assert(Valid());
         node = node->next[0]; // 遍历肯定是在跳表最底层进行遍历，所以是0
     }
 
-    template<typename Key, typename Value>
+    template <typename Key, typename Value>
     // c++ 20 feature
-    const Key &SkipList<Key, Value>::SkipListIterator::key() {
+    const Key &SkipList<Key, Value>::SkipListIterator::key()
+    {
         assert(Valid());
         return node->key;
     }
 
-    template<typename T>
+    template <typename T>
     concept HasSize = requires(const T &t) {
         { t.size() } -> std::convertible_to<std::size_t>;
     };
 
-    template<typename Key, typename Value>
-    const Value &SkipList<Key, Value>::SkipListIterator::value() {
+    template <typename Key, typename Value>
+    const Value &SkipList<Key, Value>::SkipListIterator::value()
+    {
         assert(Valid());
         return node->value;
     }
 
-    template<typename Key, typename Value>
-    bool SkipList<Key, Value>::SkipListIterator::Valid() {
+    template <typename Key, typename Value>
+    bool SkipList<Key, Value>::SkipListIterator::Valid()
+    {
         return node != nullptr;
     }
 
-    template<typename Key, typename Value>
-    SkipList<Key, Value>::SkipListIterator::SkipListIterator(const SkipList *list) : list_(list) {
+    template <typename Key, typename Value>
+    SkipList<Key, Value>::SkipListIterator::SkipListIterator(const SkipList *list) : list_(list)
+    {
         node = nullptr;
     }
 
-    template<typename Key, typename Value>
-    std::optional<Value> SkipList<Key, Value>::Get(const Key &key) {
+    template <typename Key, typename Value>
+    std::optional<Value> SkipList<Key, Value>::Get(const Key &key)
+    {
         int level = GetCurrentHeight() - 1;
         auto cur = head_;
-        while (true) {
+        while (true)
+        {
             auto next = cur->next[level];
-            if (next == nullptr) {
-                if (level == 0) {
+            if (next == nullptr)
+            {
+                if (level == 0)
+                {
                     // 遍历到这里说明key不存在
                     return std::nullopt;
-                } else {
+                }
+                else
+                {
                     --level;
                 }
-            } else {
-                if (next->key == key) {
+            }
+            else
+            {
+                if (next->key == key)
+                {
                     return next->value; // 找到了
-                } else if (next->key < key) {
+                }
+                else if (next->key < key)
+                {
                     cur = next;
-                } else if (next->key > key) {
-                    if (level == 0) {
+                }
+                else if (next->key > key)
+                {
+                    if (level == 0)
+                    {
                         // 遍历到这里说明key不存在
                         return std::nullopt;
-                    } else {
+                    }
+                    else
+                    {
                         --level; // 在非最底层遇到了大于key的数，应该下降
                     }
                 }
@@ -172,10 +199,11 @@ namespace smallkv {
         }
     }
 
-    
-    template<typename Key, typename Value>
-    void SkipList<Key, Value>::Delete(const Key &key) {
-        if (Contains(key) == false) {
+    template <typename Key, typename Value>
+    void SkipList<Key, Value>::Delete(const Key &key)
+    {
+        if (Contains(key) == false)
+        {
             logger->warn("The value you want to delete does not exist. Key={}", key);
             return;
         }
@@ -187,30 +215,44 @@ namespace smallkv {
 
         int level = GetCurrentHeight() - 1;
         auto cur = head_;
-        int level_of_target_node = -1;// 目标节点的层数
-        while (true) {
+        int level_of_target_node = -1; // 目标节点的层数
+        while (true)
+        {
             auto next = cur->next[level];
-            if (next == nullptr) {
-                if (level == 0) {
+            if (next == nullptr)
+            {
+                if (level == 0)
+                {
                     logger->error("A error point.");
                     break; // 遍历完成. 实际上这个分支不可能到达
-                } else {
+                }
+                else
+                {
                     --level;
                 }
-            } else {
-                if (next->key == key) {
+            }
+            else
+            {
+                if (next->key == key)
+                {
                     level_of_target_node = next->GetLevel();
                     prev[level] = cur;
                     --level;
-                    if (level < 0) {
+                    if (level < 0)
+                    {
                         break;
                     }
-                } else if (next->key < key) {
+                }
+                else if (next->key < key)
+                {
                     cur = next;
-                } else if (next->key > key) {
+                }
+                else if (next->key > key)
+                {
                     prev[level] = cur;
                     --level;
-                    if (level < 0) {
+                    if (level < 0)
+                    {
                         break;
                     }
                 }
@@ -218,48 +260,72 @@ namespace smallkv {
         }
 
         // 更新内存占用
-        if constexpr (HasSize<Key>) {
-            mem_usage -= key.size();      // 有 size() 就用它
-        } else {
-            mem_usage -= sizeof(Key);     // 否则退到 sizeof
+        if constexpr (HasSize<Key>)
+        {
+            mem_usage -= key.size(); // 有 size() 就用它
         }
-        if constexpr (HasSize<Value>) {
+        else
+        {
+            mem_usage -= sizeof(Key); // 否则退到 sizeof
+        }
+        if constexpr (HasSize<Value>)
+        {
             mem_usage -= prev[0]->next[0]->value.size();
-        } else {
+        }
+        else
+        {
             mem_usage -= sizeof(Value);
         }
         // mem_usage -= key.size();
         // mem_usage -= prev[0]->next[0]->value.size(); // prev[0]->next[0]指向待删除的节点
 
-        for (int i = 0; i < level_of_target_node; ++i) {
-            if (prev[i] != nullptr) {
+        for (int i = 0; i < level_of_target_node; ++i)
+        {
+            if (prev[i] != nullptr)
+            {
                 assert(prev[i]->next[i] != nullptr);
                 prev[i]->next[i] = prev[i]->next[i]->next[i];
             }
         }
     }
 
-    template<typename Key, typename Value>
-    bool SkipList<Key, Value>::Contains(const Key &key) {   // 存在key则返回true
+    template <typename Key, typename Value>
+    bool SkipList<Key, Value>::Contains(const Key &key)
+    { // 存在key则返回true
         int level = GetCurrentHeight() - 1;
         auto cur = head_;
-        while (true) {
+        while (true)
+        {
             auto next = cur->next[level];
-            if (next == nullptr) {
-                if (level == 0) {
+            if (next == nullptr)
+            {
+                if (level == 0)
+                {
                     return false; // 已经遍历完成
-                } else {
+                }
+                else
+                {
                     --level;
                 }
-            } else {
-                if (next->key == key) {
+            }
+            else
+            {
+                if (next->key == key)
+                {
                     return true;
-                } else if (next->key < key) {
+                }
+                else if (next->key < key)
+                {
                     cur = next;
-                } else if (next->key > key) {
-                    if (level == 0) {
+                }
+                else if (next->key > key)
+                {
+                    if (level == 0)
+                    {
                         return false; // 只有在最后一层，遇到大于key的时候才可以认为没找到
-                    } else {
+                    }
+                    else
+                    {
                         --level; // 在非最底层遇到了大于key的数，应该下降
                     }
                 }
@@ -267,11 +333,11 @@ namespace smallkv {
         }
     }
 
-
-
-    template<typename Key, typename Value>
-    void SkipList<Key, Value>::Insert(const Key &key, const Value &value) {
-        if (Contains(key)) {
+    template <typename Key, typename Value>
+    void SkipList<Key, Value>::Insert(const Key &key, const Value &value)
+    {
+        if (Contains(key))
+        {
             logger->warn("A duplicate key was inserted. Key={}", key);
             return;
         }
@@ -279,14 +345,20 @@ namespace smallkv {
         ++size; // 更新size
 
         //  模板名存实亡，后续需要改进。
-        if constexpr (HasSize<Key>) {
-            mem_usage += key.size();      // 有 size() 就用它
-        } else {
-            mem_usage += sizeof(Key);     // 否则退到 sizeof
+        if constexpr (HasSize<Key>)
+        {
+            mem_usage += key.size(); // 有 size() 就用它
         }
-        if constexpr (HasSize<Value>) {
+        else
+        {
+            mem_usage += sizeof(Key); // 否则退到 sizeof
+        }
+        if constexpr (HasSize<Value>)
+        {
             mem_usage += value.size();
-        } else {
+        }
+        else
+        {
             mem_usage += sizeof(Value);
         }
 
@@ -300,72 +372,91 @@ namespace smallkv {
         max_level = std::max(level_of_new_node, max_level); // 更新最大高度
         auto newNode = NewNode(key, level_of_new_node, value);
 
-        for (int i = 0; i < newNode->GetLevel(); ++i) {
-            if (prev[i] == nullptr) {
+        for (int i = 0; i < newNode->GetLevel(); ++i)
+        {
+            if (prev[i] == nullptr)
+            {
                 newNode->next[i] = nullptr;
                 head_->next[i] = newNode;
-            } else {
+            }
+            else
+            {
                 newNode->next[i] = prev[i]->next[i];
                 prev[i]->next[i] = newNode;
             }
         }
     }
 
-    template<typename Key, typename Value>
-    int SkipList<Key, Value>::GetCurrentHeight() {
+    template <typename Key, typename Value>
+    int SkipList<Key, Value>::GetCurrentHeight()
+    {
         return max_level;
     }
 
-    template<typename Key, typename Value>
-    typename SkipList<Key, Value>::Node *SkipList<Key, Value>::NewNode(const Key &key, int level, const Value &value) {
+    template <typename Key, typename Value>
+    typename SkipList<Key, Value>::Node *SkipList<Key, Value>::NewNode(const Key &key, int level, const Value &value)
+    {
         // todo: note: 这里使用了new来分配内存，后续可以考虑使用自定义的allocator。
         return new Node(key, level, value);
     }
 
-    template<typename Key, typename Value>
+    template <typename Key, typename Value>
     void SkipList<Key, Value>::FindPrevNode(
-            const Key &key, std::vector<Node *> &prev) {
+        const Key &key, std::vector<Node *> &prev)
+    {
         int level = GetCurrentHeight() - 1;
         auto cur = head_;
-        while (true) {
+        while (true)
+        {
             auto next_node = cur->next[level];
-            if (next_node == nullptr || next_node->key >= key) {
+            if (next_node == nullptr || next_node->key >= key)
+            {
                 prev[level] = cur;
-                if (level > 0) {
-                    --level;//遍历到了非最底层的终点，下降一层继续遍历
-                } else {
+                if (level > 0)
+                {
+                    --level; // 遍历到了非最底层的终点，下降一层继续遍历
+                }
+                else
+                {
                     return;
                 }
-            } else { // next_node != nullptr && next_node->key < key
+            }
+            else
+            { // next_node != nullptr && next_node->key < key
                 cur = next_node;
             }
         }
     }
 
-    template<typename Key, typename Value>
-    int SkipList<Key, Value>::RandomLevel() {
+    template <typename Key, typename Value>
+    int SkipList<Key, Value>::RandomLevel()
+    {
         int level = 1;
-        while (level < SkipList::kMaxHeight && rand() & 1) {
+        while (level < SkipList::kMaxHeight && rand() & 1)
+        {
             ++level;
         }
         return level;
     }
 
-    template<typename Key, typename Value>
+    template <typename Key, typename Value>
     SkipList<Key, Value>::SkipList(std::shared_ptr<DefaultAlloc> alloc)
-            :alloc(std::move(alloc)) {
+        : alloc(std::move(alloc))
+    {
         srand(time(0));
         head_ = NewNode(Key{}, SkipList::kMaxHeight, Value{});
         max_level = 1;
         size = 0;
     }
 
-    template<typename Key, typename Value>
-    class SkipList<Key, Value>::Node {
+    template <typename Key, typename Value>
+    class SkipList<Key, Value>::Node
+    {
     public:
         Node() = delete;
 
-        Node(const Key &key, int level, const Value &value) : key(key), value(value) {
+        Node(const Key &key, int level, const Value &value) : key(key), value(value)
+        {
             next.resize(level, nullptr);
         }
 
@@ -378,4 +469,4 @@ namespace smallkv {
         std::vector<Node *> next;
     };
 }
-#endif //SMALLKV_SKIPLIST_H
+#endif // SMALLKV_SKIPLIST_H

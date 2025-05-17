@@ -1,6 +1,5 @@
 //
-// Created by qianyy on 2023/1/4.
-//
+
 #include <cstdint>
 
 #ifndef SMALLKV_NODE_H

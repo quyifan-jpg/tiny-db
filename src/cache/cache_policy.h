@@ -1,6 +1,4 @@
-//
-// Created by qianyy on 2023/1/4.
-//
+
 #include <cstdint>
 #include "node.h"
 #include <functional>
