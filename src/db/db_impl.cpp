@@ -162,7 +162,16 @@ namespace smallkv {
         memcpy(buf + 4 + key.size() + 4, value.data(), value.size());
     }
 
-    void DBImpl::MemTableToSST() {}
+    void DBImpl::MemTableToSST() { 
+        auto sst_filepath = options_.STORAGE_DIR + "/" + utils::BuildSSTPath(0, options_.LISST_NUM);
+        logger->info("DBImpl::MemTableToSST() is called. sst_filepath={}", sst_filepath);
+
+        auto file_writer = std::make_shared<FileWriter>(sst_filepath);
+        auto sstable_builder = std::make_shared<SSTableBuilder>(mem_table->GetSize(), file_writer);
+        mem_table->ConvertToL1SST(sst_filepath, sstable_builder);
+
+        ++options_.LISST_NUM; // 下一个sst文件序号+1
+    }
 
     DBStatus DBImpl::Close() {
         return Status::Success;
