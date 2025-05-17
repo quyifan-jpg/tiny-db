@@ -4,6 +4,7 @@
 #include "utils/codec.h"
 #include "wal/wal_writer.h" 
 #include "file/file_writer.h"
+#include "sstparser/sst_parser.h"
 namespace smallkv {
     DBImpl::DBImpl(Options options) : options_(std::move(options)) {
         logger = log::get_logger();
@@ -13,6 +14,7 @@ namespace smallkv {
         });
         mem_table = std::make_shared<MemTable>(alloc);
         wal_writer = std::make_shared<WALWriter>(std::make_shared<FileWriter>(options_.WAL_DIR, true));
+        
     }
 
     DBStatus DBImpl::Put(const WriteOptions &options,
@@ -27,11 +29,11 @@ namespace smallkv {
          * 4. 如果memtable超限，应该落盘，并且开启一个新的memtable;
          */
 
-        // wal
+        // 1. wal
         char buf[8 + key.size() + value.size()];
         EncodeKV(key, value, buf);
         wal_writer->AddLog(buf);
-        // memtable
+        // 2. memtable
         if (mem_table->Contains(key)){
             mem_table->Update(key, value);
         } else {
@@ -40,7 +42,17 @@ namespace smallkv {
         if (key.empty() || value.empty()) {
             return Status::InvalidArgs;
         }
+        // 3. cache
+
         cache->insert(std::string(key), new std::string(value));
+
+        // 4. memtable超限，落盘
+        if (mem_table->GetMemUsage() > options_.MEM_TABLE_MAX_SIZE) {
+            // 1. 将memtable转为sst
+            MemTableToSST();
+            // 2. 创建新的memtable
+            mem_table = std::make_shared<MemTable>(alloc);
+        }
         return Status::Success;
     }
 
@@ -51,32 +63,77 @@ namespace smallkv {
             return Status::InvalidArgs;
         }
 
-        return Status::NotImpl;
+        //  std::unique_lock<std::shared_mutex> wlock(rwlock_);
+
+        // 1. 写WAL
+        char buf[8 + key.size()]; // 用vel_len=0表示val为空
+        EncodeKV(key, "", buf);
+        wal_writer->AddLog(buf);
+
+        // 2. 写memtable
+        if (mem_table->Contains(key)) { // 原地标记val=""表示删除
+            mem_table->Delete(key);
+        } else {
+            mem_table->Add(key, ""); // 墓碑机制
+        }
+
+        // 3. 删除缓存
+        cache->erase(key.data());
+
+        // 4. 检查memtable是否超限
+        if (mem_table->GetMemUsage() >= options_.MEM_TABLE_MAX_SIZE) {
+            MemTableToSST(); // 将memtable转为sst
+
+            // 开启写的memtable
+            mem_table = std::make_shared<MemTable>(alloc);
+            logger->info("[DBImpl::Delete] A new mem_table is created.");
+        }
+        return Status::Success;
     }
 
     DBStatus DBImpl::Get(const ReadOptions &options,
                          const std::string_view &key,
                          std::string *ret_value_ptr) {
+                             /*
+         * 读逻辑：
+         * 1. 读缓存，有则直接返回，否则进入2;
+         * 2. 依次从memtable、sst文件向下查找;
+         * 3. 找到的数据写入缓存;
+         * 4. 返回结果;
+         *
+         * */
         std::shared_lock<std::shared_mutex> rlock(rwlock_);
         if (key.empty() || ret_value_ptr == nullptr) {
             return Status::InvalidArgs;
         }
         // 1. 先从缓存中读取
-        auto node = cache->get(std::string(key));
-        if (node != nullptr) {
-            ret_value_ptr->assign(*(node->val));
-            cache->release(std::string(key)); 
-            node = nullptr; // 清空指针，避免悬空指针
+        if (cache->contains(key.data())) {
+            *ret_value_ptr = *(cache->get(key.data())->val);
             return Status::Success;
-        } 
+        }
+        logger->debug("[DBImpl::Get] Cache miss, try to read from memtable or sst files.");
         // if not found in cache, we can try to read from memtable or sst files
         if (mem_table->Contains(key)) {
             auto val = mem_table->Get(key);
             *ret_value_ptr = mem_table->Get(key.data()).value();
             return Status::Success;
         }
+        std::string sst_path = options_.STORAGE_DIR + "level_0_sst_0.sst";
+        auto sst_parser = SSTParser(sst_path);
+        sst_parser.Parse();
+        auto val = sst_parser.Seek(key);
+        if (!val.has_value()) {
+            return Status::NotFound;
+        }
+        ret_value_ptr->append(val.value());
+
+        // 4. 找到的数据写入缓存
+        //todo: 这里cache保存的是value的指针，然而val可能是临时值，需要优化，此处临时new 一下，性能拉胯
+        auto val_ = new std::string(val.value());
+        cache->insert(key.data(), val_);
+
         // return Status::Success;
-        return Status::NotFound;
+        return Status::Success;
     }
 
     DBStatus DBImpl::BatchPut(const WriteOptions &options) {
